@@ -29,14 +29,25 @@ class PointViewSet(viewsets.ModelViewSet):
         lon = request.query_params.get('longitude')
         radius = request.query_params.get('radius')
 
-        if not all([lat, lon, radius]):
+        if lat is None or lon is None or radius is None:
             return Response({"error": "Укажите latitude, longitude и radius"}, status=400)
 
-        user_location = GeosPoint(float(lon), float(lat), srid=4326)
+        try:
+            lat_f = float(lat)
+            lon_f = float(lon)
+            radius_f = float(radius)
+            if radius_f < 0:
+                return Response({"error": "Радиус не может быть отрицательным"}, status=400)
+
+            user_location = GeosPoint(lon_f, lat_f, srid=4326)
+
+        except (ValueError, TypeError):
+            return Response({"error": "Координаты и радиус должны быть числами"},
+                            status=400)
 
         # Ищем точки, которые находятся в радиусе
         points = Point.objects.filter(
-            coordinates__distance_lte=(user_location, D(km=radius))
+            coordinates__distance_lte=(user_location, D(km=radius_f))
         ).annotate(distance=Distance('coordinates', user_location)).order_by('distance')
 
         serializer = self.get_serializer(points, many=True)
@@ -55,15 +66,26 @@ class MessageViewSet(viewsets.ModelViewSet):
         lon = request.query_params.get('longitude')
         radius = request.query_params.get('radius')
 
-        if not all([lat, lon, radius]):
+        if lat is None or lon is None or radius is None:
             return Response({"error": "Укажите latitude, longitude и radius"}, status=400)
 
-        user_location = GeosPoint(float(lon), float(lat), srid=4326)
+        try:
+            lat_f = float(lat)
+            lon_f = float(lon)
+            radius_f = float(radius)
+            if radius_f < 0:
+                return Response({"error": "Радиус не может быть отрицательным"}, status=400)
+
+            user_location = GeosPoint(lon_f, lat_f, srid=4326)
+        except (ValueError, TypeError):
+            return Response({"error": "Координаты и радиус должны быть числами"}, status=400)
 
         # Ищем сообщения, точки которых находятся в радиусе
         messages = Message.objects.filter(
-            point__coordinates__distance_lte=(user_location, D(km=radius))
-        )
+            point__coordinates__distance_lte=(user_location, D(km=radius_f))
+        ).annotate(
+            distance=Distance('point__coordinates', user_location)
+        ).order_by('distance')
 
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)

@@ -153,9 +153,11 @@ Authorization: Bearer <access_token>
 
 `Geopoints collection.postman_collection.json`
 
-Импортируйте файл в Postman и используйте готовые запросы.
+1. Импортируйте файл коллекции в Postman.
+2. В настройках коллекции (вкладка Variables) установите значение http://localhost:8000.
+3. Запустите готовые запросы с помощью кнопки Run.
 
 ### Через Django
   ```bash
-docker-compose exec web django test
+docker-compose exec web python manage.py test
   ```

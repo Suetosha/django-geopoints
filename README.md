@@ -20,7 +20,7 @@
 
 ## Технологии
 
-- Python 3.14
+- Python 3.12
 - Django 5.1.4
 - Django REST Framework 3.15.2
 - djangorestframework-simplejwt
